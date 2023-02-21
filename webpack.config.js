@@ -1,67 +1,71 @@
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
-const mode = process.env.MODE
+const path = require("path");
+const webpack = require("webpack");
+const ESLintPlugin = require("eslint-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  mode,
+  mode: "development",
   entry: {
-    app: './src/scripts/app.js',
+    app: "./src/scripts/app.js",
   },
   output: {
-    path: `${ __dirname }/public/scripts`,
-    filename: 'app.min.js'
+    path: `${__dirname}/public/scripts`,
+    filename: "app.min.js",
   },
   module: {
     rules: [
       {
         test: /\.scss$/,
-        use: ExtractTextPlugin.extract({
-          use: [
-            {
-              loader: 'css-loader',
-              options: {
-                sourceMap: (mode === 'development')
-              }
+        use: [
+          MiniCssExtractPlugin.loader,
+          "css-loader",
+          {
+            loader: "sass-loader",
+            options: {
+              implementation: require("sass"),
             },
-            'sass-loader',
-            'import-glob-loader'
-          ]
-        })
+          },
+          "import-glob-loader",
+        ],
       },
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: [
-          'babel-loader',
-          {
-            loader: 'eslint-loader',
-            options: {
-              fix: false,
-              failOnError: true
-            }
-          }
-        ]
+        use: ["babel-loader"],
       },
       {
         test: /\.(png|jpg|gif|svg)$/,
         use: [
           {
-            loader: 'url-loader',
+            loader: "url-loader",
             options: {
               limit: 51200,
-              name: '../images/other/[name].[ext]'
-            }
-          }
-        ]
-      }
-    ]
+              name: "../images/other/[name].[ext]",
+            },
+          },
+        ],
+      },
+    ],
   },
   plugins: [
-    new ExtractTextPlugin('../stylesheets/style.css')
+    new MiniCssExtractPlugin({
+      filename: "./public/stylesheets/style.css",
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html",
+    }),
+    new ESLintPlugin({
+      fix: false,
+      failOnError: true,
+    }),
+    new webpack.HotModuleReplacementPlugin(),
   ],
   devServer: {
     historyApiFallback: true,
-    contentBase: `${ __dirname }/public`,
+    static: {
+      directory: path.resolve(__dirname, "public"),
+    },
     port: 3000,
-    open: true
-  }
-}
+  },
+};
